@@ -1,6 +1,6 @@
 {
   "name": "inmarelibero/gitignore-checker",
-  "description": "A PHP library to check if paths are ignored by git",
+  "description": "A PHP library to check if a path is ignored by GIT",
   "type": "library",
   "keywords": [
     "Git",
@@ -23,5 +23,13 @@
     "psr-4": {
       "Inmarelibero\\GitIgnoreChecker\\Tests\\": "tests/"
     }
-  }
+  },
+  "authors": [
+    {
+      "name": "Emanuele Gaspari",
+      "email": "inmarelibero@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "homepage": "https://traintosymfony.com"
 }
