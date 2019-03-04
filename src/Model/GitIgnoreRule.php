@@ -82,6 +82,7 @@ class GitIgnoreRule
      *
      * @param RelativePath $relativePath
      * @return bool|null
+     * @see https://labs.consol.de/development/git/2017/02/22/gitignore.html
      */
     public function getRuleDecisionOnPath(RelativePath $relativePath)
     {
