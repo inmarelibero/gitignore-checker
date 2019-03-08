@@ -142,6 +142,13 @@ class PathUtilsTest extends AbstractTestCase
         $relativePath = new RelativePath($this->getTestRepository(), $relativePath);
 
         $this->assertEquals($expectedMatch, PathUtils::ruleMatchesPath($rule, $relativePath), $this->getErrorMessageForPathmatchesRule($expectedMatch, $rule, $relativePath));
+
+        // automatically test $rule adding an initial "!": $relative must be matched anyway
+        if (strpos($rule, "!") !== 0) {
+            $ruleWithInitialExclamationMark = '!'.$rule;
+
+            $this->assertEquals($expectedMatch, PathUtils::ruleMatchesPath($ruleWithInitialExclamationMark, $relativePath), $this->getErrorMessageForPathmatchesRule($expectedMatch, $ruleWithInitialExclamationMark, $relativePath));
+        }
     }
 
     /**

@@ -17,6 +17,8 @@ class PathUtils
     /**
      * Return true if $rule matches $relativePath
      *
+     * Note: if rule begins with "!", this returns true because path is matched
+     *
      * @param string $rule
      * @param string $relativePath
      * @return bool
@@ -27,6 +29,11 @@ class PathUtils
 
         if ($relativePath->isFolder()) {
             $pathToMatch = StringUtils::addTrailingSlashIfMissing($pathToMatch);
+        }
+
+        // remove initial "!" if present, as if rule begins with "!", this returns true because path is matched
+        if (strpos($rule, "!") === 0) {
+            $rule = substr($rule, 1);
         }
 
         if (StringUtils::ruleIsOnSubfolders($rule)) {

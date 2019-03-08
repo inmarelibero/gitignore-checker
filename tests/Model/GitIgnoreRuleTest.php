@@ -55,14 +55,14 @@ class GitIgnoreRuleTest extends AbstractTestCase
 
         // test "#comment": nothing, this is a comment (first character is a #)
         // @todo restore: throws exception on __construct
-//        $this->doTestSingleGetRuleDecisionOnPath(false, '/README', '# comment');
-//        $this->doTestSingleGetRuleDecisionOnPath(false, '/foo', '# comment');
-//        $this->doTestSingleGetRuleDecisionOnPath(false, '/foo/bar_folder', '# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/README', '# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/foo', '# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '# comment');
 
         // test "\#comment": every file or folder with name #comment (\ for escaping)
-//        $this->doTestSingleGetRuleDecisionOnPath(true, '/#README', '\#README');
-//        $this->doTestSingleGetRuleDecisionOnPath(false, '/foo', '\# comment');
-//        $this->doTestSingleGetRuleDecisionOnPath(false, '/foo/bar_folder', '\# comment');
+//        $this->doTestSingleIsPathIgnored(true, '/#README', '\#README');
+//        $this->doTestSingleIsPathIgnored(false, '/foo', '\# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '\# comment');
 
         // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
         $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/README', false);
@@ -87,8 +87,8 @@ class GitIgnoreRuleTest extends AbstractTestCase
     }
 
     /**
-     * @param string $relativePath
      * @param string $rule
+     * @param string $relativePath
      * @param bool$expectedMatch
      */
     private function doTestSingleGetRuleDecisionOnPath(string $rule, string $relativePath, bool $expectedMatch) : void
@@ -99,7 +99,8 @@ class GitIgnoreRuleTest extends AbstractTestCase
 
         $gitIgnoreRule = new GitIgnoreRule(
             GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
-            $rule
+            $rule,
+            0
         );
 
         $relativePath = new RelativePath($this->getTestRepository(), $relativePath);
@@ -119,16 +120,16 @@ class GitIgnoreRuleTest extends AbstractTestCase
     }
 
     /**
-     * @param $expectedMatch
+     * @param bool $expectedMatch
      * @param GitIgnoreRule $gitIgnoreRule
-     * @param $path
+     * @param RelativePath $relativePath
      * @return string
      */
-    private function getErrorMessageForMatchPath($expectedMatch, GitIgnoreRule $gitIgnoreRule, $path)
+    private function getErrorMessageForMatchPath(bool $expectedMatch, GitIgnoreRule $gitIgnoreRule, RelativePath $relativePath)
     {
         return sprintf(
             "Path \"%s\" %s have been matched against rule \"%s\".",
-            $path,
+            $relativePath->getPath(),
             ($expectedMatch === true) ? 'should' : 'shouldn\'t',
             $gitIgnoreRule->getRule()
         );

@@ -25,6 +25,11 @@ class GitIgnoreFile
     protected $relativePath;
 
     /**
+     * @var string
+     */
+    protected $content;
+
+    /**
      * @var GitIgnoreRule[]
      */
     protected $gitIgnoreRules = [];
@@ -141,9 +146,7 @@ class GitIgnoreFile
      */
     private function parseContentByReadingFile(string $absolutePath) : array
     {
-        $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-        return $this->parseGitIgnoreLines($lines);
+        return $this->parseContent(file_get_contents($absolutePath));
     }
 
     /**
@@ -155,6 +158,8 @@ class GitIgnoreFile
      */
     private function parseContent(string $content) : array
     {
+        $this->content = $content;
+
         $lines = explode(PHP_EOL, $content);
 
         array_walk($lines, function(&$item) {
@@ -175,11 +180,23 @@ class GitIgnoreFile
      */
     private function parseGitIgnoreLines(array $lines) : array
     {
-        foreach ($lines as $line) {
-            $this->gitIgnoreRules[] = new GitIgnoreRule($this, $line);
+        $lines = array_values($lines);
+
+        foreach ($lines as $k => $line) {
+            $this->gitIgnoreRules[] = new GitIgnoreRule($this, $line, $k);
         }
 
         return $this->getGitIgnoreRules();
+    }
+
+    /**
+     * Return content
+     *
+     * @return string
+     */
+    public function getContent() : string
+    {
+        return $this->content;
     }
 
     /**
@@ -200,36 +217,59 @@ class GitIgnoreFile
      */
     public function isPathIgnored(RelativePath $relativepath) : bool
     {
-        /** @var GitIgnoreRule $gitIgnoreRule */
         try {
-            $gitIgnoreRule = $this->getLastGitIgnoreRuleInvolvedInPath($relativepath);
+            $lastGitIgnoreRuleInvolvedInPathNotExcluding = $this->getLastGitIgnoreRuleInvolvedInPath($relativepath, true);
         } catch (RuleNotFoundException $e) {
             return false;
         }
 
-        if ($gitIgnoreRule->getRuleDecisionOnPath($relativepath) === true) {
-            return true;
+        try {
+            $lastGitIgnoreRuleInvolvedInPathExcluding = $this->getLastGitIgnoreRuleInvolvedInPath($relativepath, false, true);
+        } catch (RuleNotFoundException $e) {
+            $lastGitIgnoreRuleInvolvedInPathExcluding = null;
         }
 
-        return false;
+        if ($lastGitIgnoreRuleInvolvedInPathExcluding instanceof GitIgnoreRule) {
+            if ($lastGitIgnoreRuleInvolvedInPathExcluding->getIndex() > $lastGitIgnoreRuleInvolvedInPathNotExcluding->getIndex()) {
+                return false;
+            }
+        }
+
+        return $lastGitIgnoreRuleInvolvedInPathNotExcluding->getRuleDecisionOnPath($relativepath);;
     }
 
     /**
      * Get the last GitIgnoreRule that matches a given path
      * Rule will be applied and the decision to ignore or not the path will be taken
      *
+     * @todo refactor $onlyNotExcluding and $onlyExcluding: improve names? use OptionsResolver?
+     *
      * @param $relativePath
+     * @param bool $onlyNotExcluding
+     * @param bool $onlyExcluding
      * @return GitIgnoreRule
      */
-    private function getLastGitIgnoreRuleInvolvedInPath(RelativePath $relativePath) : GitIgnoreRule
+    private function getLastGitIgnoreRuleInvolvedInPath(RelativePath $relativePath, $onlyNotExcluding = false, $onlyExcluding = false) : GitIgnoreRule
     {
         /** @var GitIgnoreRule[] $reversedGitIgnoreRules */
         $reversedGitIgnoreRules = array_reverse($this->getGitIgnoreRules());
 
         foreach ($reversedGitIgnoreRules as $gitIgnoreRule) {
-            if ($gitIgnoreRule->getRuleDecisionOnPath($relativePath) === true) {
+            if ($onlyNotExcluding === true && $gitIgnoreRule->ruleIsExcluding()) {
+                continue;
+            }
+
+            if ($onlyExcluding === true && $gitIgnoreRule->ruleIsExcluding() !== true) {
+                continue;
+            }
+
+            if ($gitIgnoreRule->pathIsMached($relativePath)) {
                 return $gitIgnoreRule;
             }
+
+//            if ($gitIgnoreRule->getRuleDecisionOnPath($relativePath) === true) {
+//                return $gitIgnoreRule;
+//            }
         }
 
         throw new RuleNotFoundException();
