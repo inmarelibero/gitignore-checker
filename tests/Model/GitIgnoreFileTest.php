@@ -15,15 +15,34 @@ use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 class GitIgnoreFileTest extends AbstractTestCase
 {
     /**
-     *
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile::buildFromRelativePathContainingGitIgnore()
      */
-    public function testConstruct()
+    public function testBuildFromRelativePathContainingGitIgnore()
     {
         $repository = $this->getTestRepository();
 
-        $gitIgnoreFile = new GitIgnoreFile(new RelativePath($repository, '/'));
+        $gitIgnoreFile = GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($repository, '/'));
         $this->assertInstanceOf(GitIgnoreFile::class, $gitIgnoreFile);
 
         $this->assertCount(2, $gitIgnoreFile->getGitIgnoreRules());
+    }
+
+    /**
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile::buildFromContent()
+     */
+    public function testBuildFromContent()
+    {
+        $repository = $this->getTestRepository();
+
+        $gitIgnoreFile = GitIgnoreFile::buildFromContent(new RelativePath($repository, '/'), <<<EOF
+foo
+bar
+
+baz
+EOF
+);
+        $this->assertInstanceOf(GitIgnoreFile::class, $gitIgnoreFile);
+
+        $this->assertCount(3, $gitIgnoreFile->getGitIgnoreRules());
     }
 }

@@ -8,7 +8,6 @@ use Inmarelibero\GitIgnoreChecker\Exception\FileNotFoundException;
 use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
 use Inmarelibero\GitIgnoreChecker\Exception\LogicException;
 use Inmarelibero\GitIgnoreChecker\Exception\RuleNotFoundException;
-use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
 
 /**
  * Class GitIgnoreFile
@@ -31,17 +30,49 @@ class GitIgnoreFile
     protected $gitIgnoreRules = [];
 
     /**
+     * Disable construtor
+     */
+    private function __construct() {}
+
+    /**
      * GitIgnoreFile constructor.
      *
      * @param RelativePath $relativePathContainingGitIgnore path containing a .gitignore file, eg. "/", "/foo/", ""/foo/bar/""
+     * @return GitIgnoreFile
      * @throws FileNotFoundException
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public function __construct(RelativePath $relativePathContainingGitIgnore)
+    public static function buildFromRelativePathContainingGitIgnore(RelativePath $relativePathContainingGitIgnore) : GitIgnoreFile
     {
-        $this->setRelativePath($relativePathContainingGitIgnore);
-        $this->parseContent();
+        $obj = new GitIgnoreFile();
+
+        $obj->setRelativePath($relativePathContainingGitIgnore);
+        $gitIgnorePath = $obj->getAbsolutePathForGitIgnore();
+
+        $obj->parseContentByReadingFile($gitIgnorePath);
+
+        return $obj;
+    }
+
+    /**
+     * GitIgnoreFile constructor.
+     *
+     * @param RelativePath $relativePathContainingGitIgnore path containing a .gitignore file, eg. "/", "/foo/", ""/foo/bar/""
+     * @param string $content
+     * @return GitIgnoreFile
+     * @throws FileNotFoundException
+     * @throws InvalidArgumentException
+     * @throws LogicException
+     */
+    public static function buildFromContent(RelativePath $relativePathContainingGitIgnore, string $content) : GitIgnoreFile
+    {
+        $obj = new GitIgnoreFile();
+
+        $obj->setRelativePath($relativePathContainingGitIgnore);
+        $obj->parseContent($content);
+
+        return $obj;
     }
 
     /**
@@ -57,19 +88,21 @@ class GitIgnoreFile
     {
         $relativePathContainingGitIgnore->checkIsFolder();
 
-
-        if (!$relativePathContainingGitIgnore->containsPath('/.gitignore')) {
-            throw new FileNotFoundException(
-                sprintf("The path \"%s\" does not contain a .gitignore file.", $relativePathContainingGitIgnore->getPath())
-            );
-        }
-
         /*
          * check that $path represents the path containing the .gitignore file, not the path containing the ".gitignore" string
          */
         if (preg_match("#\.gitignore$#", $relativePathContainingGitIgnore->getPath())) {
             throw new InvalidArgumentException(
                 sprintf("The path must not end with .gitignore: \"%s\" given.", $relativePathContainingGitIgnore->getPath())
+            );
+        }
+
+        /*
+         * check that a file ".gitignore" is actually found in $relativePathContainingGitIgnore
+         */
+        if (!$relativePathContainingGitIgnore->containsPath('/.gitignore')) {
+            throw new FileNotFoundException(
+                sprintf("The path \"%s\" does not contain a .gitignore file.", $relativePathContainingGitIgnore->getPath())
             );
         }
 
@@ -84,7 +117,7 @@ class GitIgnoreFile
      * @param RelativePath $relativePathContainingGitIgnore
      * @return string
      */
-    private function buildAbsolutePathForGitIgnore() : string
+    private function getAbsolutePathForGitIgnore() : string
     {
         return sprintf("%s/.gitignore", $this->relativePath->getAbsolutePath());
     }
@@ -100,19 +133,53 @@ class GitIgnoreFile
     }
 
     /**
-     * Parse every line of the .gitignore content
+     * Parse the content of a given .gitignore absolute path
      *
+     * @param string $absolutePath absolute path of the .gitignore file, eg. "/var/www/foo/.gitignore"
+     * @return GitIgnoreRule[]
      * @throws InvalidArgumentException
      */
-    private function parseContent() : void
+    private function parseContentByReadingFile(string $absolutePath) : array
     {
-        $absolutePath = $this->buildAbsolutePathForGitIgnore();
+        $lines = file($absolutePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
-        $lines = file($absolutePath, FILE_IGNORE_NEW_LINES);
+        return $this->parseGitIgnoreLines($lines);
+    }
 
+    /**
+     * Parse content
+     *
+     * @param string $content
+     * @return GitIgnoreRule[]
+     * @throws InvalidArgumentException
+     */
+    private function parseContent(string $content) : array
+    {
+        $lines = explode(PHP_EOL, $content);
+
+        array_walk($lines, function(&$item) {
+            $item = trim($item);
+        });
+
+        $lines = array_filter($lines);
+
+        return $this->parseGitIgnoreLines($lines);
+    }
+
+    /**
+     * Parse every line of a .gitignore
+     *
+     * @param array $lines
+     * @return GitIgnoreRule[]
+     * @throws InvalidArgumentException
+     */
+    private function parseGitIgnoreLines(array $lines) : array
+    {
         foreach ($lines as $line) {
             $this->gitIgnoreRules[] = new GitIgnoreRule($this, $line);
         }
+
+        return $this->getGitIgnoreRules();
     }
 
     /**

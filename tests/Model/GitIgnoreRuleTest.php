@@ -20,6 +20,9 @@ class GitIgnoreRuleTest extends AbstractTestCase
      */
     public function testGetRuleDecisionOnPath()
     {
+        /************************************************************************************************
+         * perform tests with ruls es NOT containing initial "!"
+         ***********************************************************************************************/
         // test "target/": folder (due to the trailing /) recursively
         $this->doTestSingleGetRuleDecisionOnPath('README/', '/README', false);
         $this->doTestSingleGetRuleDecisionOnPath('foo/', '/foo', true);
@@ -84,6 +87,10 @@ class GitIgnoreRuleTest extends AbstractTestCase
         $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
         $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
         $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+
+        /************************************************************************************************
+         * perform tests with ruls es NOT containing initial "!"
+         ***********************************************************************************************/
     }
 
     /**
@@ -98,7 +105,7 @@ class GitIgnoreRuleTest extends AbstractTestCase
         }
 
         $gitIgnoreRule = new GitIgnoreRule(
-            new GitIgnoreFile(new RelativePath($this->getTestRepository(), '/')),
+            GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
             $rule
         );
 
