@@ -35,109 +35,109 @@ class PathUtilsTest extends AbstractTestCase
     public function testMatchPath()
     {
         // test "target/": folder (due to the trailing /) recursively
-        $this->doTestPathMatchesRule('/README', 'README/', false);
-        $this->doTestPathMatchesRule('/foo/', 'foo/', true);
-//        $this->doTestPathMatchesRule('/foo', 'foo/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/', 'bar_folder/', true);
-//        $this->doTestPathMatchesRule('/foo/bar_folder', 'bar_folder/', false);
+        $this->doTestSingleRuleMatchesPath('README/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('foo/', '/foo/', true);
+//        $this->doTestSingleRuleMatchesPath('foo/', '/foo', false);
+        $this->doTestSingleRuleMatchesPath('bar_folder/', '/foo/bar_folder/', true);
+//        $this->doTestSingleRuleMatchesPath('bar_folder/', '/foo/bar_folder', false);
 
         // test "target": file or folder named target recursively
-        $this->doTestPathMatchesRule('/README', 'README', true);
-        $this->doTestPathMatchesRule('/foo', 'foo', true);
-        $this->doTestPathMatchesRule('/foo/', 'foo', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder', 'bar_folder', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/', 'bar_folder', true);
+        $this->doTestSingleRuleMatchesPath('README', '/README', true);
+        $this->doTestSingleRuleMatchesPath('foo', '/foo', true);
+        $this->doTestSingleRuleMatchesPath('foo', '/foo/', true);
+        $this->doTestSingleRuleMatchesPath('bar_folder', '/foo/bar_folder', true);
+        $this->doTestSingleRuleMatchesPath('bar_folder', '/foo/bar_folder/', true);
 
         // test "/target": file or folder named target in the top-most directory (due to the leading /)
-        $this->doTestPathMatchesRule('/README', '/README', true);
-        $this->doTestPathMatchesRule('/foo', '/foo', true);
-        $this->doTestPathMatchesRule('/foo/', '/foo', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder', '/foo', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/', '/foo', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder', '/bar_folder', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/', '/bar_folder', false);
+        $this->doTestSingleRuleMatchesPath('/README', '/README', true);
+        $this->doTestSingleRuleMatchesPath('/foo', '/foo', true);
+        $this->doTestSingleRuleMatchesPath('/foo', '/foo/', true);
+        $this->doTestSingleRuleMatchesPath('/foo', '/foo/bar_folder', true);
+        $this->doTestSingleRuleMatchesPath('/foo', '/foo/bar_folder/', true);
+        $this->doTestSingleRuleMatchesPath('/bar_folder', '/foo/bar_folder', false);
+        $this->doTestSingleRuleMatchesPath('/bar_folder', '/foo/bar_folder/', false);
 
         // test "/target/": folder named target in the top-most directory (leading and trailing /)
-        $this->doTestPathMatchesRule('/README', '/README/', false);
-        $this->doTestPathMatchesRule('/foo/', '/foo/', true);
-//        $this->doTestPathMatchesRule('/foo', '/foo/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder', '/foo/', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder', '/bar_folder/', false);
+        $this->doTestSingleRuleMatchesPath('/README/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('/foo/', '/foo/', true);
+//        $this->doTestSingleRuleMatchesPath('/foo/', '/foo', false);
+        $this->doTestSingleRuleMatchesPath('/foo/', '/foo/bar_folder', true);
+        $this->doTestSingleRuleMatchesPath('/bar_folder/', '/foo/bar_folder', false);
 
         // test "*.class": every file or folder ending with .class recursively
-        $this->doTestPathMatchesRule('/README', '/*.md', false);
-        $this->doTestPathMatchesRule('/README.md', '/*.md', true);
-        $this->doTestPathMatchesRule('/foo/README.md', '/*.md', false);
-        $this->doTestPathMatchesRule('/README', '*.md', false);
-        $this->doTestPathMatchesRule('/README.md', '*.md', true);
-        $this->doTestPathMatchesRule('/foo/README.md', '*.md', true);
+        $this->doTestSingleRuleMatchesPath('/*.md', '/README', false);
+        $this->doTestSingleRuleMatchesPath('/*.md', '/README.md', true);
+        $this->doTestSingleRuleMatchesPath('/*.md', '/foo/README.md', false);
+        $this->doTestSingleRuleMatchesPath('*.md', '/README', false);
+        $this->doTestSingleRuleMatchesPath('*.md', '/README.md', true);
+        $this->doTestSingleRuleMatchesPath('*.md', '/foo/README.md', true);
 
-        $this->doTestPathMatchesRule('/.README', '/*.md', false);
-        $this->doTestPathMatchesRule('/.README.md', '/*.md', true);
-        $this->doTestPathMatchesRule('/foo/.README.md', '/*.md', false);
-        $this->doTestPathMatchesRule('/.README', '*.md', false);
-        $this->doTestPathMatchesRule('/.README.md', '*.md', true);
-        $this->doTestPathMatchesRule('/foo/.README.md', '*.md', true);
+        $this->doTestSingleRuleMatchesPath('/*.md', '/.README', false);
+        $this->doTestSingleRuleMatchesPath('/*.md', '/.README.md', true);
+        $this->doTestSingleRuleMatchesPath('/*.md', '/foo/.README.md', false);
+        $this->doTestSingleRuleMatchesPath('*.md', '/.README', false);
+        $this->doTestSingleRuleMatchesPath('*.md', '/.README.md', true);
+        $this->doTestSingleRuleMatchesPath('*.md', '/foo/.README.md', true);
 
         // test "#comment": nothing, this is a comment (first character is a #)
         // @todo restore: throws exception on __construct
-//        $this->doTestPathMatchesRule(false, '/README', '# comment');
-//        $this->doTestPathMatchesRule(false, '/foo', '# comment');
-//        $this->doTestPathMatchesRule(false, '/foo/bar_folder', '# comment');
+//        $this->doTestSingleRuleMatchesPath(false, '/README', '# comment');
+//        $this->doTestSingleRuleMatchesPath(false, '/foo', '# comment');
+//        $this->doTestSingleRuleMatchesPath(false, '/foo/bar_folder', '# comment');
 
         // test "\#comment": every file or folder with name #comment (\ for escaping)
-//        $this->doTestPathMatchesRule(true, '/#README', '\#README');
-//        $this->doTestPathMatchesRule(false, '/foo', '\# comment');
-//        $this->doTestPathMatchesRule(false, '/foo/bar_folder', '\# comment');
+//        $this->doTestSingleRuleMatchesPath(true, '/#README', '\#README');
+//        $this->doTestSingleRuleMatchesPath(false, '/foo', '\# comment');
+//        $this->doTestSingleRuleMatchesPath(false, '/foo/bar_folder', '\# comment');
 
         // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
-        $this->doTestPathMatchesRule('/README', 'foo/bar_folder/', false);
-        $this->doTestPathMatchesRule('/foo', 'foo/bar_folder/', false);
+        $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/foo', false);
 
-//        $this->doTestPathMatchesRule('/foo/bar_folder', 'foo/bar_folder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/', 'foo/bar_folder/', true);
+//        $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/foo/bar_folder', false);
+        $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/foo/bar_folder/', true);
 
-        $this->doTestPathMatchesRule('/bar_folder/foo/', 'foo/bar_folder/', false);
-        $this->doTestPathMatchesRule('/bar_folder/foo', 'foo/bar_folder/', false);
+        $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/bar_folder/foo/', false);
+        $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/bar_folder/foo', false);
 
-        $this->doTestPathMatchesRule('/foo/bar_folder/baz_folder', 'bar_folder/baz_folder/', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/baz_folder/', 'bar_folder/baz_folder/', true);
+        $this->doTestSingleRuleMatchesPath('bar_folder/baz_folder/', '/foo/bar_folder/baz_folder', true);
+        $this->doTestSingleRuleMatchesPath('bar_folder/baz_folder/', '/foo/bar_folder/baz_folder/', true);
 
-        $this->doTestPathMatchesRule('/README', '/foo/bar_folder/', false);
-        $this->doTestPathMatchesRule('/foo', '/foo/bar_folder/', false);
+        $this->doTestSingleRuleMatchesPath('/foo/bar_folder/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('/foo/bar_folder/', '/foo', false);
 
-//        $this->doTestPathMatchesRule('/foo/bar_folder', '/foo/bar_folder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/', '/foo/bar_folder/', true);
+//        $this->doTestSingleRuleMatchesPath('/foo/bar_folder/', '/foo/bar_folder', false);
+        $this->doTestSingleRuleMatchesPath('/foo/bar_folder/', '/foo/bar_folder/', true);
 
-        $this->doTestPathMatchesRule('/bar_folder/foo/', '/foo/bar_folder/', false);
-        $this->doTestPathMatchesRule('/bar_folder/foo', '/foo/bar_folder/', false);
+        $this->doTestSingleRuleMatchesPath('/foo/bar_folder/', '/bar_folder/foo/', false);
+        $this->doTestSingleRuleMatchesPath('/foo/bar_folder/', '/bar_folder/foo', false);
 
-        $this->doTestPathMatchesRule('/foo/bar_folder/baz_folder', '/bar_folder/baz_folder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/baz_folder/', '/bar_folder/baz_folder/', false);
+        $this->doTestSingleRuleMatchesPath('/bar_folder/baz_folder/', '/foo/bar_folder/baz_folder', false);
+        $this->doTestSingleRuleMatchesPath('/bar_folder/baz_folder/', '/foo/bar_folder/baz_folder/', false);
 
         // test "target/*/logs/": every folder named logs two levels under a folder named target (* doesn’t include /)
-        $this->doTestPathMatchesRule('/README', 'foo/*/bar_subfolder/', false);
-        $this->doTestPathMatchesRule('/README', '/foo/*/bar_subfolder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/bar_subfolder/', 'foo/*/bar_subfolder/', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/bar_subfolder/', '/foo/*/bar_subfolder/', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/README', 'foo/*/bar_subfolder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/README', '/foo/*/bar_subfolder/', false);
+        $this->doTestSingleRuleMatchesPath('foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('/foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleMatchesPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleMatchesPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+        $this->doTestSingleRuleMatchesPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
 
         // test "target/**/logs/": every folder named logs somewhere under a folder named target (** includes /)
-        $this->doTestPathMatchesRule('/README', 'foo/**/bar_subfolder/', false);
-        $this->doTestPathMatchesRule('/README', '/foo/**/bar_subfolder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/bar_subfolder/', 'foo/**/bar_subfolder/', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/bar_subfolder/', '/foo/**/bar_subfolder/', true);
-        $this->doTestPathMatchesRule('/foo/bar_folder/README', 'foo/**/bar_subfolder/', false);
-        $this->doTestPathMatchesRule('/foo/bar_folder/README', '/foo/**/bar_subfolder/', false);
+        $this->doTestSingleRuleMatchesPath('foo/**/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('/foo/**/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleMatchesPath('foo/**/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleMatchesPath('/foo/**/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleMatchesPath('foo/**/bar_subfolder/', '/foo/bar_folder/README', false);
+        $this->doTestSingleRuleMatchesPath('/foo/**/bar_subfolder/', '/foo/bar_folder/README', false);
     }
 
     /**
-     * @param $relativePath
-     * @param $rule
-     * @param $expectedMatch
+     * @param string $rule
+     * @param string $relativePath
+     * @param bool $expectedMatch
      */
-    private function doTestPathMatchesRule($relativePath, $rule, $expectedMatch)
+    private function doTestSingleRuleMatchesPath(string $rule, string $relativePath, bool $expectedMatch) : void
     {
         $relativePath = new RelativePath($this->getTestRepository(), $relativePath);
 
