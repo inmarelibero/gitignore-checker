@@ -16,166 +16,91 @@ use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 class GitIgnoreRuleTest extends AbstractTestCase
 {
     /**
-     * @return string
+     *
      */
-    public function testMatchPath()
+    public function testGetRuleDecisionOnPath()
     {
         // test "target/": folder (due to the trailing /) recursively
-        $this->doTestGitIgnoreRule(false, '/README', 'README/');
-        $this->doTestGitIgnoreRule(true, '/foo', 'foo/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'bar_folder/');
+        $this->doTestSingleGetRuleDecisionOnPath('README/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/', '/foo', true);
+        $this->doTestSingleGetRuleDecisionOnPath('bar_folder/', '/foo/bar_folder', true);
 
         // test "target": file or folder named target recursively
-        $this->doTestGitIgnoreRule(true, '/README', 'README');
-        $this->doTestGitIgnoreRule(true, '/foo', 'foo');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'bar_folder');
+        $this->doTestSingleGetRuleDecisionOnPath('README', '/README', true);
+        $this->doTestSingleGetRuleDecisionOnPath('foo', '/foo', true);
+        $this->doTestSingleGetRuleDecisionOnPath('bar_folder', '/foo/bar_folder', true);
 
         // test "/target": file or folder named target in the top-most directory (due to the leading /)
-        $this->doTestGitIgnoreRule(true, '/README', '/README');
-        $this->doTestGitIgnoreRule(true, '/foo', '/foo');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', '/foo');
-        $this->doTestGitIgnoreRule(false, '/foo/bar_folder', '/bar_folder');
+        $this->doTestSingleGetRuleDecisionOnPath('/README', '/README', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo', '/foo', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo', '/foo/bar_folder', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/bar_folder', '/foo/bar_folder', false);
 
         // test "/target/": folder named target in the top-most directory (leading and trailing /)
-        $this->doTestGitIgnoreRule(false, '/README', '/README/');
-        $this->doTestGitIgnoreRule(true, '/foo', '/foo/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', '/foo/');
-        $this->doTestGitIgnoreRule(false, '/foo/bar_folder', '/bar_folder/');
+        $this->doTestSingleGetRuleDecisionOnPath('/README/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/', '/foo', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/', '/foo/bar_folder', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/bar_folder/', '/foo/bar_folder', false);
 
         // test "*.class": every file or folder ending with .class recursively
-        $this->doTestGitIgnoreRule(false, '/README', '*.md');
-        $this->doTestGitIgnoreRule(true, '/README.md', '*.md');
-        $this->doTestGitIgnoreRule(true, '/foo/README.md', '*.md');
-        $this->doTestGitIgnoreRule(false, '/README', '/*.md');
-        $this->doTestGitIgnoreRule(true, '/README.md', '/*.md');
-        $this->doTestGitIgnoreRule(false, '/foo/README.md', '/*.md');
-        $this->doTestGitIgnoreRule(false, '/.README', '/*.md');
-        $this->doTestGitIgnoreRule(true, '/.README.md', '/*.md');
-        $this->doTestGitIgnoreRule(false, '/foo/.README.md', '/*.md');
+        $this->doTestSingleGetRuleDecisionOnPath('*.md', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('*.md', '/README.md', true);
+        $this->doTestSingleGetRuleDecisionOnPath('*.md', '/foo/README.md', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/README.md', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/foo/README.md', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/.README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/.README.md', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/foo/.README.md', false);
 
         // test "#comment": nothing, this is a comment (first character is a #)
         // @todo restore: throws exception on __construct
-//        $this->doTestGitIgnoreRule(false, '/README', '# comment');
-//        $this->doTestGitIgnoreRule(false, '/foo', '# comment');
-//        $this->doTestGitIgnoreRule(false, '/foo/bar_folder', '# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/README', '# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/foo', '# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '# comment');
 
         // test "\#comment": every file or folder with name #comment (\ for escaping)
-//        $this->doTestGitIgnoreRule(true, '/#README', '\#README');
-//        $this->doTestGitIgnoreRule(false, '/foo', '\# comment');
-//        $this->doTestGitIgnoreRule(false, '/foo/bar_folder', '\# comment');
+//        $this->doTestSingleIsPathIgnored(true, '/#README', '\#README');
+//        $this->doTestSingleIsPathIgnored(false, '/foo', '\# comment');
+//        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '\# comment');
 
         // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
-        $this->doTestGitIgnoreRule(false, '/README', 'foo/bar_folder/');
-        $this->doTestGitIgnoreRule(false, '/foo', 'foo/bar_folder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'foo/bar_folder/');
+        $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/foo', false);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/foo/bar_folder', true);
 
         // test "target/*/logs/": every folder named logs two levels under a folder named target (* doesn’t include /)
-        $this->doTestGitIgnoreRule(false, '/README', 'foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(false, '/README', '/foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder/bar_subfolder/', 'foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder/bar_subfolder/', '/foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(false, '/foo/bar_folder/README', 'foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(false, '/foo/bar_folder/README', '/foo/*/bar_subfolder/');
+        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
 
         // test "target/**/logs/": every folder named logs somewhere under a folder named target (** includes /)
-        $this->doTestGitIgnoreRule(false, '/README', 'foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(false, '/README', '/foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder/bar_subfolder/', 'foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder/bar_subfolder/', '/foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(false, '/foo/bar_folder/README', 'foo/*/bar_subfolder/');
-        $this->doTestGitIgnoreRule(false, '/foo/bar_folder/README', '/foo/*/bar_subfolder/');
-
-
-
-
-
-        // test files in root directory
-        $this->doTestGitIgnoreRule(true, '/README', 'readme');
-        $this->doTestGitIgnoreRule(false, '/README', 'readme/');
-
-        $this->doTestGitIgnoreRule(true, '/.README', '.readme');
-        $this->doTestGitIgnoreRule(false, '/.README', '.readme/');
-
-        // test files in subfolder of root directory
-        $this->doTestGitIgnoreRule(false, '/foo/bar', 'readme');
-        $this->doTestGitIgnoreRule(true, '/foo/bar', 'foo/bar');
-        $this->doTestGitIgnoreRule(false, '/foo/bar', 'foo/bar/');
-
-        $this->doTestGitIgnoreRule(false, '/.foo/bar', 'readme');
-        $this->doTestGitIgnoreRule(true, '/.foo/bar', '.foo/bar');
-        $this->doTestGitIgnoreRule(false, '/.foo/bar', '.foo/bar/');
-
-        // test directory in root directory
-        $this->doTestGitIgnoreRule(true, '/foo', 'foo');
-        $this->doTestGitIgnoreRule(true, '/foo/', 'foo/');
-
-        $this->doTestGitIgnoreRule(true, '/.foo', '.foo');
-        $this->doTestGitIgnoreRule(true, '/.foo', '.foo/');
-
-        // test directory in subfolder of root directory
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'foo');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'foo/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'foo');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'foo/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'bar_folder');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'bar_folder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', 'foo/bar_folder');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder/', 'foo/bar_folder/');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder', '/foo/bar_folder');
-        $this->doTestGitIgnoreRule(true, '/foo/bar_folder/', '/foo/bar_folder/');
-
-        $this->doTestGitIgnoreRule(true, '/.foo/bar_folder', '.foo/bar_folder');
-        $this->doTestGitIgnoreRule(true, '/.foo/bar_folder', '.foo/bar_folder/');
-
-        // test regexes
-        $this->doTestGitIgnoreRule(true, '/README', '*');
-        $this->doTestGitIgnoreRule(true, '/README', 'readme*');
-        $this->doTestGitIgnoreRule(true, '/README', 're*');
-        $this->doTestGitIgnoreRule(true, '/README', '*readme');
-        $this->doTestGitIgnoreRule(true, '/README', '*me');
-
-        $this->doTestGitIgnoreRule(true, '/.README', '*');
-        $this->doTestGitIgnoreRule(true, '/.README', '.*');
-        $this->doTestGitIgnoreRule(true, '/.README', '.readme*');
-        $this->doTestGitIgnoreRule(false, '/.README', 'readme*');
-        $this->doTestGitIgnoreRule(false, '/.README', 're*');
-        $this->doTestGitIgnoreRule(true, '/.README', '.re*');
-        $this->doTestGitIgnoreRule(true, '/.README', '.*readme');
-        $this->doTestGitIgnoreRule(true, '/.README', '.*me');
-
-        $this->doTestGitIgnoreRule(true, '/foo/bar', 'foo*');
-        $this->doTestGitIgnoreRule(true, '/foo/bar', 'bar*');
+        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
     }
 
     /**
-     * Test automatically:
-     *  - $rule
-     *  - $rule with all uppercase characters
-     *  - $rule with all lowercase characters
-     *
-     * @param bool $expectedMatch
-     * @param string $relativePath eg. "/foo"
      * @param string $rule
+     * @param string $relativePath
+     * @param bool$expectedMatch
      */
-    private function doTestGitIgnoreRule($expectedMatch, $relativePath, $rule)
-    {
-        $this->doTestSingle($expectedMatch, $relativePath, $rule);
-    }
-
-    /**
-     * @param $expectedMatch
-     * @param $relativePath
-     * @param $rule
-     */
-    private function doTestSingle($expectedMatch, $relativePath, $rule)
+    private function doTestSingleGetRuleDecisionOnPath(string $rule, string $relativePath, bool $expectedMatch) : void
     {
         if (!is_bool($expectedMatch)) {
             throw new \InvalidArgumentException("ExpectedMatch must be a boolean.");
         }
 
         $gitIgnoreRule = new GitIgnoreRule(
-            new GitIgnoreFile(new RelativePath($this->getTestRepository(), '/')),
-            $rule
+            GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
+            $rule,
+            0
         );
 
         $relativePath = new RelativePath($this->getTestRepository(), $relativePath);
@@ -185,19 +110,26 @@ class GitIgnoreRuleTest extends AbstractTestCase
             $gitIgnoreRule->getRuleDecisionOnPath($relativePath),
             $this->getErrorMessageForMatchPath($expectedMatch, $gitIgnoreRule, $relativePath)
         );
+
+        // automatically test $rule adding an initial "!": must always not ignore the file
+        if (strpos($rule, "!") !== 0) {
+            $ruleWithInitialExclamationMark = '!'.$rule;
+
+            $this->doTestSingleGetRuleDecisionOnPath($ruleWithInitialExclamationMark, $relativePath->getPath(), false);
+        }
     }
 
     /**
-     * @param $expectedMatch
+     * @param bool $expectedMatch
      * @param GitIgnoreRule $gitIgnoreRule
-     * @param $path
+     * @param RelativePath $relativePath
      * @return string
      */
-    private function getErrorMessageForMatchPath($expectedMatch, GitIgnoreRule $gitIgnoreRule, $path)
+    private function getErrorMessageForMatchPath(bool $expectedMatch, GitIgnoreRule $gitIgnoreRule, RelativePath $relativePath)
     {
         return sprintf(
             "Path \"%s\" %s have been matched against rule \"%s\".",
-            $path,
+            $relativePath->getPath(),
             ($expectedMatch === true) ? 'should' : 'shouldn\'t',
             $gitIgnoreRule->getRule()
         );

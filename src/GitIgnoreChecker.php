@@ -92,6 +92,6 @@ final class GitIgnoreChecker
      */
     private function searchGitIgnoreFileInRelativePath(RelativePath $relativePath) : GitIgnoreFile
     {
-        return new GitIgnoreFile($relativePath);
+        return GitIgnoreFile::buildFromRelativePathContainingGitIgnore($relativePath);
     }
 }

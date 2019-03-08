@@ -8,7 +8,6 @@ use Inmarelibero\GitIgnoreChecker\Exception\FileNotFoundException;
 use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
 use Inmarelibero\GitIgnoreChecker\Exception\LogicException;
 use Inmarelibero\GitIgnoreChecker\Exception\RuleNotFoundException;
-use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
 
 /**
  * Class GitIgnoreFile
@@ -26,22 +25,59 @@ class GitIgnoreFile
     protected $relativePath;
 
     /**
+     * @var string
+     */
+    protected $content;
+
+    /**
      * @var GitIgnoreRule[]
      */
     protected $gitIgnoreRules = [];
 
     /**
+     * Disable construtor
+     */
+    private function __construct() {}
+
+    /**
      * GitIgnoreFile constructor.
      *
      * @param RelativePath $relativePathContainingGitIgnore path containing a .gitignore file, eg. "/", "/foo/", ""/foo/bar/""
+     * @return GitIgnoreFile
      * @throws FileNotFoundException
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public function __construct(RelativePath $relativePathContainingGitIgnore)
+    public static function buildFromRelativePathContainingGitIgnore(RelativePath $relativePathContainingGitIgnore) : GitIgnoreFile
     {
-        $this->setRelativePath($relativePathContainingGitIgnore);
-        $this->parseContent();
+        $obj = new GitIgnoreFile();
+
+        $obj->setRelativePath($relativePathContainingGitIgnore);
+        $gitIgnorePath = $obj->getAbsolutePathForGitIgnore();
+
+        $obj->parseContentByReadingFile($gitIgnorePath);
+
+        return $obj;
+    }
+
+    /**
+     * GitIgnoreFile constructor.
+     *
+     * @param RelativePath $relativePathContainingGitIgnore path containing a .gitignore file, eg. "/", "/foo/", ""/foo/bar/""
+     * @param string $content
+     * @return GitIgnoreFile
+     * @throws FileNotFoundException
+     * @throws InvalidArgumentException
+     * @throws LogicException
+     */
+    public static function buildFromContent(RelativePath $relativePathContainingGitIgnore, string $content) : GitIgnoreFile
+    {
+        $obj = new GitIgnoreFile();
+
+        $obj->setRelativePath($relativePathContainingGitIgnore);
+        $obj->parseContent($content);
+
+        return $obj;
     }
 
     /**
@@ -57,19 +93,21 @@ class GitIgnoreFile
     {
         $relativePathContainingGitIgnore->checkIsFolder();
 
-
-        if (!$relativePathContainingGitIgnore->containsPath('/.gitignore')) {
-            throw new FileNotFoundException(
-                sprintf("The path \"%s\" does not contain a .gitignore file.", $relativePathContainingGitIgnore->getPath())
-            );
-        }
-
         /*
          * check that $path represents the path containing the .gitignore file, not the path containing the ".gitignore" string
          */
         if (preg_match("#\.gitignore$#", $relativePathContainingGitIgnore->getPath())) {
             throw new InvalidArgumentException(
                 sprintf("The path must not end with .gitignore: \"%s\" given.", $relativePathContainingGitIgnore->getPath())
+            );
+        }
+
+        /*
+         * check that a file ".gitignore" is actually found in $relativePathContainingGitIgnore
+         */
+        if (!$relativePathContainingGitIgnore->containsPath('/.gitignore')) {
+            throw new FileNotFoundException(
+                sprintf("The path \"%s\" does not contain a .gitignore file.", $relativePathContainingGitIgnore->getPath())
             );
         }
 
@@ -84,7 +122,7 @@ class GitIgnoreFile
      * @param RelativePath $relativePathContainingGitIgnore
      * @return string
      */
-    private function buildAbsolutePathForGitIgnore() : string
+    private function getAbsolutePathForGitIgnore() : string
     {
         return sprintf("%s/.gitignore", $this->relativePath->getAbsolutePath());
     }
@@ -100,19 +138,65 @@ class GitIgnoreFile
     }
 
     /**
-     * Parse every line of the .gitignore content
+     * Parse the content of a given .gitignore absolute path
      *
+     * @param string $absolutePath absolute path of the .gitignore file, eg. "/var/www/foo/.gitignore"
+     * @return GitIgnoreRule[]
      * @throws InvalidArgumentException
      */
-    private function parseContent() : void
+    private function parseContentByReadingFile(string $absolutePath) : array
     {
-        $absolutePath = $this->buildAbsolutePathForGitIgnore();
+        return $this->parseContent(file_get_contents($absolutePath));
+    }
 
-        $lines = file($absolutePath, FILE_IGNORE_NEW_LINES);
+    /**
+     * Parse content
+     *
+     * @param string $content
+     * @return GitIgnoreRule[]
+     * @throws InvalidArgumentException
+     */
+    private function parseContent(string $content) : array
+    {
+        $this->content = $content;
 
-        foreach ($lines as $line) {
-            $this->gitIgnoreRules[] = new GitIgnoreRule($this, $line);
+        $lines = explode(PHP_EOL, $content);
+
+        array_walk($lines, function(&$item) {
+            $item = trim($item);
+        });
+
+        $lines = array_filter($lines);
+
+        return $this->parseGitIgnoreLines($lines);
+    }
+
+    /**
+     * Parse every line of a .gitignore
+     *
+     * @param array $lines
+     * @return GitIgnoreRule[]
+     * @throws InvalidArgumentException
+     */
+    private function parseGitIgnoreLines(array $lines) : array
+    {
+        $lines = array_values($lines);
+
+        foreach ($lines as $k => $line) {
+            $this->gitIgnoreRules[] = new GitIgnoreRule($this, $line, $k);
         }
+
+        return $this->getGitIgnoreRules();
+    }
+
+    /**
+     * Return content
+     *
+     * @return string
+     */
+    public function getContent() : string
+    {
+        return $this->content;
     }
 
     /**
@@ -133,36 +217,59 @@ class GitIgnoreFile
      */
     public function isPathIgnored(RelativePath $relativepath) : bool
     {
-        /** @var GitIgnoreRule $gitIgnoreRule */
         try {
-            $gitIgnoreRule = $this->getLastGitIgnoreRuleInvolvedInPath($relativepath);
+            $lastGitIgnoreRuleInvolvedInPathNotExcluding = $this->getLastGitIgnoreRuleInvolvedInPath($relativepath, true);
         } catch (RuleNotFoundException $e) {
             return false;
         }
 
-        if ($gitIgnoreRule->getRuleDecisionOnPath($relativepath) === true) {
-            return true;
+        try {
+            $lastGitIgnoreRuleInvolvedInPathExcluding = $this->getLastGitIgnoreRuleInvolvedInPath($relativepath, false, true);
+        } catch (RuleNotFoundException $e) {
+            $lastGitIgnoreRuleInvolvedInPathExcluding = null;
         }
 
-        return false;
+        if ($lastGitIgnoreRuleInvolvedInPathExcluding instanceof GitIgnoreRule) {
+            if ($lastGitIgnoreRuleInvolvedInPathExcluding->getIndex() > $lastGitIgnoreRuleInvolvedInPathNotExcluding->getIndex()) {
+                return false;
+            }
+        }
+
+        return $lastGitIgnoreRuleInvolvedInPathNotExcluding->getRuleDecisionOnPath($relativepath);;
     }
 
     /**
      * Get the last GitIgnoreRule that matches a given path
      * Rule will be applied and the decision to ignore or not the path will be taken
      *
+     * @todo refactor $onlyNotExcluding and $onlyExcluding: improve names? use OptionsResolver?
+     *
      * @param $relativePath
+     * @param bool $onlyNotExcluding
+     * @param bool $onlyExcluding
      * @return GitIgnoreRule
      */
-    private function getLastGitIgnoreRuleInvolvedInPath(RelativePath $relativePath) : GitIgnoreRule
+    private function getLastGitIgnoreRuleInvolvedInPath(RelativePath $relativePath, $onlyNotExcluding = false, $onlyExcluding = false) : GitIgnoreRule
     {
         /** @var GitIgnoreRule[] $reversedGitIgnoreRules */
         $reversedGitIgnoreRules = array_reverse($this->getGitIgnoreRules());
 
         foreach ($reversedGitIgnoreRules as $gitIgnoreRule) {
-            if ($gitIgnoreRule->getRuleDecisionOnPath($relativePath) === true) {
+            if ($onlyNotExcluding === true && $gitIgnoreRule->ruleIsExcluding()) {
+                continue;
+            }
+
+            if ($onlyExcluding === true && $gitIgnoreRule->ruleIsExcluding() !== true) {
+                continue;
+            }
+
+            if ($gitIgnoreRule->pathIsMached($relativePath)) {
                 return $gitIgnoreRule;
             }
+
+//            if ($gitIgnoreRule->getRuleDecisionOnPath($relativePath) === true) {
+//                return $gitIgnoreRule;
+//            }
         }
 
         throw new RuleNotFoundException();
