@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Inmarelibero\GitIgnoreChecker\Exception;
 
 /**
- * InvalidArgumentException class
+ * Class InvalidArgumentException
+ * @package Inmarelibero\GitIgnoreChecker\Exception
  */
 class InvalidArgumentException extends GitIgnoreCherkerException
 {

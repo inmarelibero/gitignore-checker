@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Inmarelibero\GitIgnoreChecker\Tests\Model;
 
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile;
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreRule;
-use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
 use Inmarelibero\GitIgnoreChecker\Model\Repository;
 use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 
 /**
  * Class RepositoryTest
  * @package Inmarelibero\GitIgnoreChecker\Tests\Model
+ *
+ * @covers \Inmarelibero\GitIgnoreChecker\Model\Repository
  */
 class RepositoryTest extends AbstractTestCase
 {
     /**
-     *
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\Repository::__construct
      */
     public function testConstruct()
     {
@@ -25,9 +24,18 @@ class RepositoryTest extends AbstractTestCase
         $repository = new Repository($this->getTestRepositoryPath());
 
         $this->assertEquals($repositoryPath, $repository->getPath());
-        $this->assertEquals($repositoryPath.'/', $repository->buildAbsolutePath('/'));
-        $this->assertEquals($repositoryPath.'/foo', $repository->buildAbsolutePath('/foo'));
-        $this->assertEquals($repositoryPath.'/.README', $repository->buildAbsolutePath('/.README'));
-        $this->assertEquals($repositoryPath.'/foo/bar', $repository->buildAbsolutePath('/foo/bar'));
+    }
+
+    /**
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\Repository::buildAbsolutePath()
+     */
+    public function testBuildAbsolutePath()
+    {
+        $repository = $this->getTestRepository();
+
+        $this->assertEquals($repository->getPath().'/', $repository->buildAbsolutePath('/'));
+        $this->assertEquals($repository->getPath().'/foo', $repository->buildAbsolutePath('/foo'));
+        $this->assertEquals($repository->getPath().'/.README', $repository->buildAbsolutePath('/.README'));
+        $this->assertEquals($repository->getPath().'/foo/bar', $repository->buildAbsolutePath('/foo/bar'));
     }
 }

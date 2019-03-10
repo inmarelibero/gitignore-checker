@@ -19,7 +19,10 @@ class RelativePath
     protected $repository;
 
     /**
-     * @var string the relative path, must begin with "/" because it's always relative to the Repository root
+     * A relative path in a given Repository.
+     * Even if it's relative from the point of view of the filesystem, must begin with "/" because it's always relative to the Repository root
+     *
+     * @var string
      */
     protected $path;
 
@@ -27,12 +30,12 @@ class RelativePath
      * RelativePath constructor.
      *
      * @param Repository $repository
-     * @param string $path path is absolute (must begin with ("/"), but always relative to Repository root
+     * @param string $path path a relative path in a given Repository (must begin with "/" because it's always relative to the Repository root)
      * @throws FileNotFoundException
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public function __construct(Repository $repository, $path)
+    public function __construct(Repository $repository, string $path)
     {
         $this->repository = $repository;
         $this->setPath($path);
@@ -48,20 +51,22 @@ class RelativePath
 
     /**
      * Set path
-     *   - check if file/folder actually exists
+     * Check if file/folder actually exists before setting it
      *
      * @param string $path
      * @return RelativePath
-     * @throws FileNotFoundException
      * @throws InvalidArgumentException
-     * @throws LogicException
      */
-    public function setPath(string $path): RelativePath
+    public function setPath(string $path) : RelativePath
     {
         // check relative $path represents a valid file
-        PathUtils::checkAbsolutePathIsValid(
+        if (!PathUtils::absolutePathIsValid(
             $this->repository->buildAbsolutePath($path)
-        );
+        )) {
+            throw new InvalidArgumentException(
+                sprintf("Unable to set path \"%s\".", $path)
+            );
+        };
 
         $this->path = $path;
 
@@ -69,23 +74,23 @@ class RelativePath
     }
 
     /**
-     * Get Repository
-     *
-     * @return Repository
-     */
-    public function getRepository(): Repository
-    {
-        return $this->repository;
-    }
-
-    /**
      * Get path
      *
      * @return string
      */
-    public function getPath(): string
+    public function getPath() : string
     {
         return $this->path;
+    }
+
+    /**
+     * Get Repository
+     *
+     * @return Repository
+     */
+    public function getRepository() : Repository
+    {
+        return $this->repository;
     }
 
     /**
@@ -93,36 +98,30 @@ class RelativePath
      *
      * @return string
      */
-    public function getAbsolutePath(): string
+    public function getAbsolutePath() : string
     {
         return $this->getRepository()->buildAbsolutePath($this->path);
     }
 
     /**
-     * Return true if this represents a folder
+     * Return true if this RelativePath represents a folder
      *
      * @return bool
      */
     public function isFolder() : bool
     {
-        try {
-            $this->checkIsFolder();
-        } catch (LogicException $e) {
-            return false;
-        }
-
-        return true;
+        return PathUtils::absolutePathIsValid($this->getAbsolutePath(), true);
     }
 
     /**
      * Throw an exception if this does not represent a folder
      *
+     * @return bool
      * @throws InvalidArgumentException
-     * @throws LogicException
      */
-    public function checkIsFolder() : void
+    public function checkIsFolder() : bool
     {
-        PathUtils::checkAbsolutePathIsValid($this->getAbsolutePath(), true);
+        return PathUtils::absolutePathIsValid($this->getAbsolutePath(), true);
     }
 
     /**

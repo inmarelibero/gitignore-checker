@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Inmarelibero\GitIgnoreChecker\Exception;
 
 /**
- * RuleNotFoundException class
+ * Class RuleNotFoundException
+ * @package Inmarelibero\GitIgnoreChecker\Exception
  */
 class RuleNotFoundException extends GitIgnoreCherkerException
 {

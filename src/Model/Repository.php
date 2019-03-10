@@ -3,7 +3,6 @@
 namespace Inmarelibero\GitIgnoreChecker\Model;
 
 use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
-use Inmarelibero\GitIgnoreChecker\Exception\LogicException;
 use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
 use Inmarelibero\GitIgnoreChecker\Utils\StringUtils;
 
@@ -21,11 +20,10 @@ class Repository
     /**
      * Repository constructor.
      *
-     * @param string $path absolute path of the repository
+     * @param string $path absolute path of the repository in the filesystem
      * @throws InvalidArgumentException
-     * @throws LogicException
      */
-    public function __construct($path)
+    public function __construct(string $path)
     {
         $this->setPath($path);
     }
@@ -33,16 +31,27 @@ class Repository
     /**
      * Set the path of the Git repository (project root)
      *
-     * @param $path
+     * @param string $path
      * @return Repository
      * @throws InvalidArgumentException
-     * @throws LogicException
      */
-    public function setPath($path) : Repository
+    private function setPath(string $path) : Repository
     {
-        PathUtils::checkAbsolutePathIsFolder($path);
+        if (!PathUtils::absolutePathIsValid($path, true)) {
+            throw new InvalidArgumentException(
+                sprintf("Unable to set path \"%s\".", $path)
+            );
+        }
 
-        $this->path = realpath($path);
+        $path = realpath($path);
+
+        if (!$path) {
+            throw new InvalidArgumentException(
+                sprintf("Unable to set path \"%s\".", $path)
+            );
+        }
+
+        $this->path = $path;
 
         return $this;
     }

@@ -17,6 +17,8 @@ class PathUtils
     /**
      * Return true if $rule matches $relativePath
      *
+     * Note: if rule begins with "!", this returns true because path is matched
+     *
      * @param string $rule
      * @param string $relativePath
      * @return bool
@@ -27,6 +29,11 @@ class PathUtils
 
         if ($relativePath->isFolder()) {
             $pathToMatch = StringUtils::addTrailingSlashIfMissing($pathToMatch);
+        }
+
+        // remove initial "!" if present, as if rule begins with "!", this returns true because path is matched
+        if (strpos($rule, "!") === 0) {
+            $rule = substr($rule, 1);
         }
 
         if (StringUtils::ruleIsOnSubfolders($rule)) {
@@ -61,55 +68,45 @@ class PathUtils
     }
 
     /**
-     * Throws exception if $path does not represent a readable and existing folder
-     *
-     * @param string $path
-     * @throws InvalidArgumentException
-     * @throws LogicException
-     */
-    public static function checkAbsolutePathIsFolder(string $path) : void
-    {
-        self::checkAbsolutePathIsValid($path, true);
-    }
-
-    /**
-     * Throws exception if $path does not represent a readable and existing file/folder
+     * Return true if $path represents a readable and existing file/folder
      *
      * @param string $path
      * @param bool $checkIsDir
      * @param bool $checkIsFile
+     * @return bool
      * @throws InvalidArgumentException
-     * @throws LogicException
      */
-    public static function checkAbsolutePathIsValid(string $path, $checkIsDir = false, $checkIsFile = false) : void
+    public static function absolutePathIsValid(string $path, $checkIsDir = false, $checkIsFile = false) : bool
     {
         if (!StringUtils::stringHasInitialSlash($path)) {
-            throw new LogicException(sprintf("Argument must be an absolute path: \"%s\" given.", $path));
+            throw new InvalidArgumentException(sprintf("Argument must be an absolute path: \"%s\" given.", $path));
         }
 
         if (!file_exists($path)) {
-            throw new LogicException(sprintf("Path \"%s\" does not exist.", $path));
+            throw new InvalidArgumentException(sprintf("Path \"%s\" does not exist.", $path));
         }
 
         if ($checkIsDir === true) {
             if (!is_dir($path)) {
-                throw new LogicException(sprintf("Path \"%s\" exists but it's not a directory.", $path));
+                return false;
             }
         }
 
         if ($checkIsFile === true) {
             if (!is_file($path)) {
-                throw new LogicException(sprintf("Path \"%s\" exists but it's not a file.", $path));
+                return false;
             }
         }
 
         if (!is_readable($path)) {
-            throw new LogicException(sprintf("Path \"%s\" exists but it's not readable.", $path));
+            return false;
         }
 
         if (realpath($path) === false) {
-            throw new LogicException(sprintf("Path \"%s\" does not exist.", $path));
+            return false;
         }
+
+        return true;
     }
 
     /**

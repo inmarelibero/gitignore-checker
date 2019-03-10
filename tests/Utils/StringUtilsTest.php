@@ -7,12 +7,17 @@ namespace Inmarelibero\GitIgnoreChecker\Tests;
 use Inmarelibero\GitIgnoreChecker\Utils\StringUtils;
 
 /**
+ * Class StringUtilsTest
+ * @package Inmarelibero\GitIgnoreChecker\Tests
+ *
  * Unit tests for class StringUtils
+ *
+ * @todo add missing tests for remaining methods, reoder
  */
 class StringUtilsTest extends AbstractTestCase
 {
     /**
-     *
+     * @covers \Inmarelibero\GitIgnoreChecker\Utils\StringUtils::stringHasInitialSlash()
      */
     public function testStringHasInitialSlash()
     {
@@ -30,7 +35,7 @@ class StringUtilsTest extends AbstractTestCase
     }
 
     /**
-     *
+     * @covers \Inmarelibero\GitIgnoreChecker\Utils\StringUtils::explodeStringWithDirectorySeparatorAsDelimiter()
      */
     public function testExplodeStringWithDirectorySeparatorAsDelimiter()
     {

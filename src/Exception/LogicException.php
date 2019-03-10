@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Inmarelibero\GitIgnoreChecker\Exception;
 
 /**
- * LogicException class
+ * Class LogicException
+ * @package Inmarelibero\GitIgnoreChecker\Exception
  */
 class LogicException extends GitIgnoreCherkerException
 {

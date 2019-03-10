@@ -78,6 +78,9 @@ class StringUtils
      */
     public static function regexIsMatched(string $regex, string $input) : bool
     {
+        // always escape # (ignore already escaped "\#")
+        $regex = preg_replace("@(?<!\\\)#@", '\#', $regex);
+
         // build the executable regex
         $regex = sprintf('#%s#i', $regex);
 
@@ -214,7 +217,7 @@ class StringUtils
      */
     public static function ruleIsOnSubfolders(string $rule)
     {
-        return preg_match("#.+\/.+#", $rule) === 1;
+        return self::regexIsMatched('.+\/.+', $rule);
     }
 
     /**
@@ -281,7 +284,7 @@ class StringUtils
      */
     public static function stringHasInitialSlash(string $input) : bool
     {
-        return preg_match("#^\/.*#", $input) === 1; // @todo check for $path containing "#"
+        return self::regexIsMatched('^\/.*', $input);
     }
 
     /**
@@ -292,6 +295,6 @@ class StringUtils
      */
     public static function stringHasTrailingSlash(string $input) : bool
     {
-        return preg_match("#.*\/$#", $input) === 1;   // @todo check for $path containing "#"
+        return self::regexIsMatched('.*\/$', $input);
     }
 }
