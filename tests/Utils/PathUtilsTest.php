@@ -17,8 +17,6 @@ class PathUtilsTest extends AbstractTestCase
      */
     public function testGetDirectoriesToScan()
     {
-        $testRepositoryPath = $this->getTestRepositoryPath();
-
         // '/'
         $this->assertCount(0, PathUtils::getRelativeDirectoriesToScan(new RelativePath($this->getTestRepository(), '/')));
 
@@ -86,9 +84,11 @@ class PathUtilsTest extends AbstractTestCase
 //        $this->doTestSingleRuleMatchesPath(false, '/foo/bar_folder', '# comment');
 
         // test "\#comment": every file or folder with name #comment (\ for escaping)
-//        $this->doTestSingleRuleMatchesPath(true, '/#README', '\#README');
-//        $this->doTestSingleRuleMatchesPath(false, '/foo', '\# comment');
-//        $this->doTestSingleRuleMatchesPath(false, '/foo/bar_folder', '\# comment');
+        $this->doTestSingleRuleMatchesPath('\#README', '/#README', true);
+        $this->doTestSingleRuleMatchesPath('\#README', '/#README', true);
+        $this->doTestSingleRuleMatchesPath('\#foo', '/#foo', true);
+        $this->doTestSingleRuleMatchesPath('\#foo/', '/#foo', true);
+        $this->doTestSingleRuleMatchesPath('/foo/\#README', '/foo/#README', true);
 
         // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
         $this->doTestSingleRuleMatchesPath('foo/bar_folder/', '/README', false);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Inmarelibero\GitIgnoreChecker\Tests\Model;
 
+use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
 use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile;
 use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreRule;
 use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
@@ -60,9 +61,11 @@ class GitIgnoreRuleTest extends AbstractTestCase
 //        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '# comment');
 
         // test "\#comment": every file or folder with name #comment (\ for escaping)
-//        $this->doTestSingleIsPathIgnored(true, '/#README', '\#README');
-//        $this->doTestSingleIsPathIgnored(false, '/foo', '\# comment');
-//        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '\# comment');
+        $this->doTestSingleGetRuleDecisionOnPath('\#README', '/#README', true);
+        $this->doTestSingleGetRuleDecisionOnPath('\#README', '/#README', true);
+        $this->doTestSingleGetRuleDecisionOnPath('\#foo', '/#foo', true);
+        $this->doTestSingleGetRuleDecisionOnPath('\#foo/', '/#foo', true);
+        $this->doTestSingleGetRuleDecisionOnPath('/foo/\#README', '/foo/#README', true);
 
         // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
         $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/README', false);
@@ -84,6 +87,31 @@ class GitIgnoreRuleTest extends AbstractTestCase
         $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
         $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
         $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+    }
+
+    /**
+     *
+     */
+    public function testConstructWithComment()
+    {
+        foreach ([
+            '#comment',
+            '# comment',
+            ' # comment',
+         ] as $rule) {
+            try {
+                new GitIgnoreRule(
+                    GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
+                    $rule,
+                    0
+                );
+                $this->fail(sprintf(
+                    "Object GitIgnoreRule shouldn't have been created with rule = \"%s\".", $rule
+                ));
+            } catch (InvalidArgumentException $e) {
+                $this->assertTrue(true);
+            }
+        }
     }
 
     /**

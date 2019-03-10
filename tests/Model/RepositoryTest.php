@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Inmarelibero\GitIgnoreChecker\Tests\Model;
 
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile;
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreRule;
-use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
 use Inmarelibero\GitIgnoreChecker\Model\Repository;
 use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 
