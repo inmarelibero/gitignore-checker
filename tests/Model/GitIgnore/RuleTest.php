@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Inmarelibero\GitIgnoreChecker\Tests\Model;
+namespace Inmarelibero\GitIgnoreChecker\Tests\Model\GitIgnore;
 
 use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile;
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreRule;
+use Inmarelibero\GitIgnoreChecker\Model\GitIgnore\File;
+use Inmarelibero\GitIgnoreChecker\Model\GitIgnore\Rule;
 use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
 use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 
 /**
- * Class GitIgnoreRuleTest
- * @package Inmarelibero\GitIgnoreChecker\Tests\Model
+ * Class RuleTest
+ * @package Inmarelibero\GitIgnoreChecker\Tests\Model\GitIgnore
  */
-class GitIgnoreRuleTest extends AbstractTestCase
+class RuleTest extends AbstractTestCase
 {
     /**
      *
@@ -100,13 +100,13 @@ class GitIgnoreRuleTest extends AbstractTestCase
             ' # comment',
          ] as $rule) {
             try {
-                new GitIgnoreRule(
-                    GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
+                new Rule(
+                    File::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
                     $rule,
                     0
                 );
                 $this->fail(sprintf(
-                    "Object GitIgnoreRule shouldn't have been created with rule = \"%s\".", $rule
+                    "Rule Object shouldn't have been created with rule = \"%s\".", $rule
                 ));
             } catch (InvalidArgumentException $e) {
                 $this->assertTrue(true);
@@ -117,7 +117,7 @@ class GitIgnoreRuleTest extends AbstractTestCase
     /**
      * @param string $rule
      * @param string $relativePath
-     * @param bool$expectedMatch
+     * @param bool $expectedMatch
      */
     private function doTestSingleGetRuleDecisionOnPath(string $rule, string $relativePath, bool $expectedMatch) : void
     {
@@ -125,8 +125,8 @@ class GitIgnoreRuleTest extends AbstractTestCase
             throw new \InvalidArgumentException("ExpectedMatch must be a boolean.");
         }
 
-        $gitIgnoreRule = new GitIgnoreRule(
-            GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
+        $ruleObj = new Rule(
+            File::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
             $rule,
             0
         );
@@ -135,8 +135,8 @@ class GitIgnoreRuleTest extends AbstractTestCase
 
         $this->assertEquals(
             $expectedMatch,
-            $gitIgnoreRule->getRuleDecisionOnPath($relativePath),
-            $this->getErrorMessageForMatchPath($expectedMatch, $gitIgnoreRule, $relativePath)
+            $ruleObj->getRuleDecisionOnPath($relativePath),
+            $this->getErrorMessageForMatchPath($expectedMatch, $ruleObj, $relativePath)
         );
 
         // automatically test $rule adding an initial "!": must always not ignore the file
@@ -149,17 +149,17 @@ class GitIgnoreRuleTest extends AbstractTestCase
 
     /**
      * @param bool $expectedMatch
-     * @param GitIgnoreRule $gitIgnoreRule
+     * @param Rule $rule
      * @param RelativePath $relativePath
      * @return string
      */
-    private function getErrorMessageForMatchPath(bool $expectedMatch, GitIgnoreRule $gitIgnoreRule, RelativePath $relativePath)
+    private function getErrorMessageForMatchPath(bool $expectedMatch, Rule $rule, RelativePath $relativePath)
     {
         return sprintf(
             "Path \"%s\" %s have been matched against rule \"%s\".",
             $relativePath->getPath(),
             ($expectedMatch === true) ? 'should' : 'shouldn\'t',
-            $gitIgnoreRule->getRule()
+            $rule->getRule()
         );
     }
 }

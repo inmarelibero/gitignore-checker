@@ -7,7 +7,7 @@ namespace Inmarelibero\GitIgnoreChecker;
 use Inmarelibero\GitIgnoreChecker\Exception\FileNotFoundException;
 use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
 use Inmarelibero\GitIgnoreChecker\Exception\LogicException;
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile;
+use Inmarelibero\GitIgnoreChecker\Model\GitIgnore\File;
 use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
 use Inmarelibero\GitIgnoreChecker\Model\Repository;
 use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
@@ -71,7 +71,7 @@ final class GitIgnoreChecker
                 continue;
             }
 
-            if (!$gitIgnoreFile instanceof GitIgnoreFile) {
+            if (!$gitIgnoreFile instanceof File) {
                 continue;
             }
 
@@ -85,13 +85,13 @@ final class GitIgnoreChecker
 
     /**
      * @param $relativePath
-     * @return GitIgnoreFile
+     * @return File
      * @throws FileNotFoundException
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    private function searchGitIgnoreFileInRelativePath(RelativePath $relativePath) : GitIgnoreFile
+    private function searchGitIgnoreFileInRelativePath(RelativePath $relativePath) : File
     {
-        return GitIgnoreFile::buildFromRelativePathContainingGitIgnore($relativePath);
+        return File::buildFromRelativePathContainingGitIgnore($relativePath);
     }
 }

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Inmarelibero\GitIgnoreChecker\Exception;
 
 /**
- * FileNotFoundException class
+ * Class FileNotFoundException
+ * @package Inmarelibero\GitIgnoreChecker\Exception
  */
 class FileNotFoundException extends GitIgnoreCherkerException
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Inmarelibero\GitIgnoreChecker\Tests\Model;
+namespace Inmarelibero\GitIgnoreChecker\Tests\Model\GitIgnore;
 
-use Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile;
+use Inmarelibero\GitIgnoreChecker\Model\GitIgnore\File;
 use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
 use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 
@@ -12,38 +12,38 @@ use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
  * Class GitIgnoreFileTest
  * @package Inmarelibero\GitIgnoreChecker\Tests\Model
  */
-class GitIgnoreFileTest extends AbstractTestCase
+class FileTest extends AbstractTestCase
 {
     /**
-     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile::buildFromRelativePathContainingGitIgnore()
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnore\File::buildFromRelativePathContainingGitIgnore()
      */
     public function testBuildFromRelativePathContainingGitIgnore()
     {
         $repository = $this->getTestRepository();
 
-        $gitIgnoreFile = GitIgnoreFile::buildFromRelativePathContainingGitIgnore(new RelativePath($repository, '/'));
-        $this->assertInstanceOf(GitIgnoreFile::class, $gitIgnoreFile);
+        $gitIgnoreFile = File::buildFromRelativePathContainingGitIgnore(new RelativePath($repository, '/'));
+        $this->assertInstanceOf(File::class, $gitIgnoreFile);
 
-        $this->assertCount(2, $gitIgnoreFile->getGitIgnoreRules());
+        $this->assertCount(2, $gitIgnoreFile->getRules());
     }
 
     /**
-     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnoreFile::buildFromContent()
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnore\File::buildFromContent()
      */
     public function testBuildFromContent()
     {
         $repository = $this->getTestRepository();
 
-        $gitIgnoreFile = GitIgnoreFile::buildFromContent(new RelativePath($repository, '/'), <<<EOF
+        $gitIgnoreFile = File::buildFromContent(new RelativePath($repository, '/'), <<<EOF
 foo
 bar
 
 baz
 EOF
 );
-        $this->assertInstanceOf(GitIgnoreFile::class, $gitIgnoreFile);
+        $this->assertInstanceOf(File::class, $gitIgnoreFile);
 
-        $this->assertCount(3, $gitIgnoreFile->getGitIgnoreRules());
+        $this->assertCount(3, $gitIgnoreFile->getRules());
     }
     /**
      *
@@ -564,7 +564,7 @@ EOF
             throw new \InvalidArgumentException("ExpectedMatch must be a boolean.");
         }
 
-        $gitIgnoreFile = GitIgnoreFile::buildFromContent(new RelativePath($this->getTestRepository(), '/'), $content);
+        $gitIgnoreFile = File::buildFromContent(new RelativePath($this->getTestRepository(), '/'), $content);
 
         $relativePath = new RelativePath($this->getTestRepository(), $relativePath);
 
@@ -577,11 +577,11 @@ EOF
 
     /**
      * @param $expectedMatch
-     * @param GitIgnoreFile $gitIgnoreFile
+     * @param File $gitIgnoreFile
      * @param $path
      * @return string
      */
-    private function getErrorMessageForIsPathIgnored(bool $expectedMatch, GitIgnoreFile $gitIgnoreFile, RelativePath $relativePath)
+    private function getErrorMessageForIsPathIgnored(bool $expectedMatch, File $gitIgnoreFile, RelativePath $relativePath)
     {
         return sprintf(<<<EOF
 Path "%s" %s have been matched against .gitignore file with content:

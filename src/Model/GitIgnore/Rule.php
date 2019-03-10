@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Inmarelibero\GitIgnoreChecker\Model;
+namespace Inmarelibero\GitIgnoreChecker\Model\GitIgnore;
 
 use Inmarelibero\GitIgnoreChecker\Exception\InvalidArgumentException;
+use Inmarelibero\GitIgnoreChecker\Model\RelativePath;
 use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
 
 /**
- * Class GitIgnoreRule
+ * Class Rule
  * @package Inmarelibero\GitIgnoreChecker\Model
  *
  * @see https://git-scm.com/docs/gitignore
  *
  * Represent a .gitignore rule
  */
-class GitIgnoreRule
+class Rule
 {
     /**
-     * @var GitIgnoreFile
+     * @var File
      */
     protected $gitIgnoreFile;
 
@@ -33,26 +34,26 @@ class GitIgnoreRule
     protected $index;
 
     /**
-     * GitIgnoreRule constructor.
+     * Rule constructor.
      *
-     * @param GitIgnoreFile $gitIgnoreFile
+     * @param File $gitIgnoreFile
      * @param string $rule
      * @param int $index the row number in the original .gitignore file
      * @throws InvalidArgumentException
      */
-    public function __construct(GitIgnoreFile $gitIgnoreFile, string $rule, int $index)
+    public function __construct(File $gitIgnoreFile, string $rule, int $index)
     {
         $this->gitIgnoreFile = $gitIgnoreFile;
-        $this->rule = $this->parseRule($rule);
-        $this->index = $this->parseIndex($index);
+        $this->setRule($rule);
+        $this->setIndex($index);
     }
 
     /**
      * @param string $rule
-     * @return string
+     * @return Rule
      * @throws InvalidArgumentException
      */
-    private function parseRule(string $rule) : string
+    private function setRule(string $rule) : Rule
     {
         $rule = trim($rule);
 
@@ -69,7 +70,9 @@ class GitIgnoreRule
             );
         }
 
-        return $rule;
+        $this->rule = $rule;
+
+        return $this;
     }
 
     /**
@@ -92,10 +95,10 @@ class GitIgnoreRule
 
     /**
      * @param int $index
-     * @return int Exception
+     * @return Rule
      * @throws InvalidArgumentException
      */
-    public function parseIndex(int $index) : int
+    public function setIndex(int $index) : Rule
     {
         if (!(\is_int($index) && $index >= 0) ) {
             throw new InvalidArgumentException(
@@ -103,7 +106,9 @@ class GitIgnoreRule
             );
         }
 
-        return $index;
+        $this->index = $index;
+
+        return $this;
     }
 
     /**
