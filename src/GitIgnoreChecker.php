@@ -66,16 +66,16 @@ final class GitIgnoreChecker
             $relativePathToScan = new RelativePath($this->getRepository(), $directory);
 
             try {
-                $gitIgnoreFile = $this->searchGitIgnoreFileInRelativePath($relativePathToScan);
+                $file = $this->searchGitIgnoreFileInRelativePath($relativePathToScan);
             } catch (FileNotFoundException $e) {
                 continue;
             }
 
-            if (!$gitIgnoreFile instanceof File) {
+            if (!$file instanceof File) {
                 continue;
             }
 
-            if ($gitIgnoreFile->isPathIgnored($relativePathToCheck)) {
+            if ($file->isPathIgnored($relativePathToCheck)) {
                 return true;
             }
         }

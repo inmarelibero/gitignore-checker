@@ -13,92 +13,21 @@ use Inmarelibero\GitIgnoreChecker\Tests\AbstractTestCase;
 /**
  * Class RuleTest
  * @package Inmarelibero\GitIgnoreChecker\Tests\Model\GitIgnore
+ *
+ * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnore\Rule
  */
 class RuleTest extends AbstractTestCase
 {
     /**
-     *
-     */
-    public function testGetRuleDecisionOnPath()
-    {
-        // test "target/": folder (due to the trailing /) recursively
-        $this->doTestSingleGetRuleDecisionOnPath('README/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/', '/foo', true);
-        $this->doTestSingleGetRuleDecisionOnPath('bar_folder/', '/foo/bar_folder', true);
-
-        // test "target": file or folder named target recursively
-        $this->doTestSingleGetRuleDecisionOnPath('README', '/README', true);
-        $this->doTestSingleGetRuleDecisionOnPath('foo', '/foo', true);
-        $this->doTestSingleGetRuleDecisionOnPath('bar_folder', '/foo/bar_folder', true);
-
-        // test "/target": file or folder named target in the top-most directory (due to the leading /)
-        $this->doTestSingleGetRuleDecisionOnPath('/README', '/README', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo', '/foo', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo', '/foo/bar_folder', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/bar_folder', '/foo/bar_folder', false);
-
-        // test "/target/": folder named target in the top-most directory (leading and trailing /)
-        $this->doTestSingleGetRuleDecisionOnPath('/README/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/', '/foo', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/', '/foo/bar_folder', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/bar_folder/', '/foo/bar_folder', false);
-
-        // test "*.class": every file or folder ending with .class recursively
-        $this->doTestSingleGetRuleDecisionOnPath('*.md', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('*.md', '/README.md', true);
-        $this->doTestSingleGetRuleDecisionOnPath('*.md', '/foo/README.md', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/README.md', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/foo/README.md', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/.README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/.README.md', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/*.md', '/foo/.README.md', false);
-
-        // test "#comment": nothing, this is a comment (first character is a #)
-        // @todo restore: throws exception on __construct
-//        $this->doTestSingleIsPathIgnored(false, '/README', '# comment');
-//        $this->doTestSingleIsPathIgnored(false, '/foo', '# comment');
-//        $this->doTestSingleIsPathIgnored(false, '/foo/bar_folder', '# comment');
-
-        // test "\#comment": every file or folder with name #comment (\ for escaping)
-        $this->doTestSingleGetRuleDecisionOnPath('\#README', '/#README', true);
-        $this->doTestSingleGetRuleDecisionOnPath('\#README', '/#README', true);
-        $this->doTestSingleGetRuleDecisionOnPath('\#foo', '/#foo', true);
-        $this->doTestSingleGetRuleDecisionOnPath('\#foo/', '/#foo', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/\#README', '/foo/#README', true);
-
-        // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
-        $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/foo', false);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/bar_folder/', '/foo/bar_folder', true);
-
-        // test "target/*/logs/": every folder named logs two levels under a folder named target (* doesn’t include /)
-        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
-
-        // test "target/**/logs/": every folder named logs somewhere under a folder named target (** includes /)
-        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
-        $this->doTestSingleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
-        $this->doTestSingleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
-    }
-
-    /**
-     *
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnore\Rule::__construct
      */
     public function testConstructWithComment()
     {
         foreach ([
-            '#comment',
-            '# comment',
-            ' # comment',
-         ] as $rule) {
+                     '#comment',
+                     '# comment',
+                     ' # comment',
+                 ] as $rule) {
             try {
                 new Rule(
                     File::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
@@ -115,51 +44,75 @@ class RuleTest extends AbstractTestCase
     }
 
     /**
-     * @param string $rule
-     * @param string $relativePath
-     * @param bool $expectedMatch
+     * @covers \Inmarelibero\GitIgnoreChecker\Model\GitIgnore\Rule::getRuleDecisionOnPath()
      */
-    private function doTestSingleGetRuleDecisionOnPath(string $rule, string $relativePath, bool $expectedMatch) : void
+    public function testGetRuleDecisionOnPath()
     {
-        if (!is_bool($expectedMatch)) {
-            throw new \InvalidArgumentException("ExpectedMatch must be a boolean.");
-        }
+        // test "target/": folder (due to the trailing /) recursively
+        $this->doTestSingleRuleGetRuleDecisionOnPath('README/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/', '/foo', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('bar_folder/', '/foo/bar_folder', true);
 
-        $ruleObj = new Rule(
-            File::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
-            $rule,
-            0
-        );
+        // test "target": file or folder named target recursively
+        $this->doTestSingleRuleGetRuleDecisionOnPath('README', '/README', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo', '/foo', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('bar_folder', '/foo/bar_folder', true);
 
-        $relativePath = new RelativePath($this->getTestRepository(), $relativePath);
+        // test "/target": file or folder named target in the top-most directory (due to the leading /)
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/README', '/README', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo', '/foo', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo', '/foo/bar_folder', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/bar_folder', '/foo/bar_folder', false);
 
-        $this->assertEquals(
-            $expectedMatch,
-            $ruleObj->getRuleDecisionOnPath($relativePath),
-            $this->getErrorMessageForMatchPath($expectedMatch, $ruleObj, $relativePath)
-        );
+        // test "/target/": folder named target in the top-most directory (leading and trailing /)
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/README/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/', '/foo', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/', '/foo/bar_folder', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/bar_folder/', '/foo/bar_folder', false);
 
-        // automatically test $rule adding an initial "!": must always not ignore the file
-        if (strpos($rule, "!") !== 0) {
-            $ruleWithInitialExclamationMark = '!'.$rule;
+        // test "*.class": every file or folder ending with .class recursively
+        $this->doTestSingleRuleGetRuleDecisionOnPath('*.md', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('*.md', '/README.md', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('*.md', '/foo/README.md', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/*.md', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/*.md', '/README.md', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/*.md', '/foo/README.md', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/*.md', '/.README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/*.md', '/.README.md', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/*.md', '/foo/.README.md', false);
 
-            $this->doTestSingleGetRuleDecisionOnPath($ruleWithInitialExclamationMark, $relativePath->getPath(), false);
-        }
-    }
+        // test "#comment": nothing, this is a comment (first character is a #)
+        // @todo restore: throws exception on __construct
+//        $this->doTestSingleFileIsPathIgnored(false, '/README', '# comment');
+//        $this->doTestSingleFileIsPathIgnored(false, '/foo', '# comment');
+//        $this->doTestSingleFileIsPathIgnored(false, '/foo/bar_folder', '# comment');
 
-    /**
-     * @param bool $expectedMatch
-     * @param Rule $rule
-     * @param RelativePath $relativePath
-     * @return string
-     */
-    private function getErrorMessageForMatchPath(bool $expectedMatch, Rule $rule, RelativePath $relativePath)
-    {
-        return sprintf(
-            "Path \"%s\" %s have been matched against rule \"%s\".",
-            $relativePath->getPath(),
-            ($expectedMatch === true) ? 'should' : 'shouldn\'t',
-            $rule->getRule()
-        );
+        // test "\#comment": every file or folder with name #comment (\ for escaping)
+        $this->doTestSingleRuleGetRuleDecisionOnPath('\#README', '/#README', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('\#README', '/#README', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('\#foo', '/#foo', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('\#foo/', '/#foo', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/\#README', '/foo/#README', true);
+
+        // test "target/logs/": every folder named logs which is a subdirectory of a folder named target
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/bar_folder/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/bar_folder/', '/foo', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/bar_folder/', '/foo/bar_folder', true);
+
+        // test "target/*/logs/": every folder named logs two levels under a folder named target (* doesn’t include /)
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+
+        // test "target/**/logs/": every folder named logs somewhere under a folder named target (** includes /)
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/bar_subfolder/', true);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
+        $this->doTestSingleRuleGetRuleDecisionOnPath('/foo/*/bar_subfolder/', '/foo/bar_folder/README', false);
     }
 }

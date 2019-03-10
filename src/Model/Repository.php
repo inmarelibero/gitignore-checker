@@ -35,7 +35,7 @@ class Repository
      * @return Repository
      * @throws InvalidArgumentException
      */
-    public function setPath(string $path) : Repository
+    private function setPath(string $path) : Repository
     {
         if (!PathUtils::absolutePathIsValid($path, true)) {
             throw new InvalidArgumentException(
