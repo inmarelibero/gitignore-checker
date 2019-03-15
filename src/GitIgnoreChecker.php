@@ -56,11 +56,7 @@ final class GitIgnoreChecker
      */
     public function isPathIgnored($path) : bool
     {
-        try {
-            $relativePathToCheck = new RelativePath($this->getRepository(), $path);
-        } catch (InvalidArgumentException $e) {
-            return true;
-        }
+        $relativePathToCheck = new RelativePath($this->getRepository(), $path);
 
         // for each parent directory, read possible .gitignore and check if $path is ignored by it
         $directories = PathUtils::getRelativeDirectoriesToScan($relativePathToCheck);

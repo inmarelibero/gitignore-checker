@@ -28,13 +28,5 @@ class GitIgnoreCheckerTest extends AbstractTestCase
         $this->assertFalse(
             $gitIgnoreChecker->isPathIgnored('/foo/bar')
         );
-
-        $this->assertTrue(
-            $gitIgnoreChecker->isPathIgnored('/foo/ignore_me')
-        );
-
-        $this->assertTrue(
-            $gitIgnoreChecker->isPathIgnored('/ignored_foo')
-        );
     }
 }
