@@ -36,6 +36,5 @@
   },
   "scripts": {
       "test": "php ./bin/phpunit -c ."
-  },
-  "homepage": "https://traintosymfony.com"
+  }
 }
