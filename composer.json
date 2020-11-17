@@ -31,5 +31,11 @@
       "role": "Developer"
     }
   ],
+  "config": {
+      "bin-dir": "bin"
+  },
+  "scripts": {
+      "test": "php ./bin/phpunit -c ."
+  },
   "homepage": "https://traintosymfony.com"
 }

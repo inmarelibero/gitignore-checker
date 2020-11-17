@@ -40,4 +40,8 @@ RUN TESTS
 
 After making sure you installed dependencies with command `composer install`, you can run tests by executing:
 
-    php vendor/phpunit/phpunit/phpunit -c .
+    php bin/phpunit
+
+or executing:
+
+    composer test
