@@ -24,15 +24,23 @@ final class GitIgnoreChecker
     protected $repository;
 
     /**
+     * Filename for the gitignore rules.
+     *
+     * @var string
+     */
+    protected $gitignore = '.gitignore';
+
+    /**
      * GitIgnoreChecker constructor.
      *
      * @param string $repositoryPath absolute path representing the Repository project root
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public function __construct($repositoryPath)
+    public function __construct($repositoryPath, $gitignore = '.gitignore')
     {
         $this->repository = new Repository($repositoryPath);
+        $this->gitignore  = $gitignore;
     }
 
     /**
@@ -92,6 +100,6 @@ final class GitIgnoreChecker
      */
     private function searchGitIgnoreFileInRelativePath(RelativePath $relativePath) : File
     {
-        return File::buildFromRelativePathContainingGitIgnore($relativePath);
+        return File::buildFromRelativePathContainingGitIgnore($relativePath, $this->gitignore);
     }
 }
