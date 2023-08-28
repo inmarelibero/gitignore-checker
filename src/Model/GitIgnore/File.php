@@ -85,11 +85,12 @@ class File
      * Set relative path containing the .gitignore file
      *
      * @param RelativePath $relativePathContainingGitIgnore
+     * @param string $gitignoreFilename The name of the text file containing the gitignore rules.
      * @return File
      * @throws InvalidArgumentException
      * @throws FileNotFoundException
      */
-    private function setRelativePath(RelativePath $relativePathContainingGitIgnore, $gitignoreFilename) : File
+    private function setRelativePath(RelativePath $relativePathContainingGitIgnore, string $gitignoreFilename = '.gitignore') : File
     {
         if (!$relativePathContainingGitIgnore->isFolder()) {
             throw new \InvalidArgumentException();
@@ -100,7 +101,7 @@ class File
          */
         if (preg_match('#'.preg_quote($gitignoreFilename,'\\').'$#', $relativePathContainingGitIgnore->getPath())) {
             throw new InvalidArgumentException(
-                sprintf("The path must not end with .gitignore: \"%s\" given.", $relativePathContainingGitIgnore->getPath())
+                sprintf("The path must not end with %s: \"%s\" given.", $gitignoreFilename, $relativePathContainingGitIgnore->getPath())
             );
         }
 
@@ -109,7 +110,7 @@ class File
          */
         if (!$relativePathContainingGitIgnore->containsPath("/$gitignoreFilename")) {
             throw new FileNotFoundException(
-                sprintf("The path \"%s\" does not contain a .gitignore file.", $relativePathContainingGitIgnore->getPath())
+                sprintf("The path \"%s\" does not contain a %s file.", $relativePathContainingGitIgnore->getPath(), $gitignoreFilename)
             );
         }
 
@@ -121,12 +122,12 @@ class File
     /**
      * Return the absolute path for the .gitignore file
      *
-     * @param RelativePath $relativePathContainingGitIgnore
+     * @param string $gitignoreFilename The filename containing the rules.
      * @return string
      */
-    private function getAbsolutePathForGitIgnore($gitignore) : string
+    private function getAbsolutePathForGitIgnore(string $gitignoreFilename = '.gitignore') : string
     {
-        return sprintf("%s/%s", $this->relativePath->getAbsolutePath(),$gitignore);
+        return sprintf("%s/%s", $this->relativePath->getAbsolutePath(), $gitignoreFilename);
     }
 
     /**
