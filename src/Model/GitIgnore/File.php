@@ -185,6 +185,9 @@ class File
         $lines = array_values($lines);
 
         foreach ($lines as $k => $line) {
+            if (empty($line) || strpos($line, '#') === 0) {
+                continue;
+            }
             $this->rules[] = new Rule($this, $line, $k);
         }
 
