@@ -49,12 +49,12 @@ class File
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public static function buildFromRelativePathContainingGitIgnore(RelativePath $relativePathContainingGitIgnore) : File
+    public static function buildFromRelativePathContainingGitIgnore(RelativePath $relativePathContainingGitIgnore, $gitignoreFilename = '.gitignore') : File
     {
         $obj = new File();
 
-        $obj->setRelativePath($relativePathContainingGitIgnore);
-        $gitIgnorePath = $obj->getAbsolutePathForGitIgnore();
+        $obj->setRelativePath($relativePathContainingGitIgnore, $gitignoreFilename);
+        $gitIgnorePath = $obj->getAbsolutePathForGitIgnore($gitignoreFilename);
 
         $obj->parseContentByReadingFile($gitIgnorePath);
 
@@ -85,11 +85,12 @@ class File
      * Set relative path containing the .gitignore file
      *
      * @param RelativePath $relativePathContainingGitIgnore
+     * @param string $gitignoreFilename The name of the text file containing the gitignore rules.
      * @return File
      * @throws InvalidArgumentException
      * @throws FileNotFoundException
      */
-    private function setRelativePath(RelativePath $relativePathContainingGitIgnore) : File
+    private function setRelativePath(RelativePath $relativePathContainingGitIgnore, string $gitignoreFilename = '.gitignore') : File
     {
         if (!$relativePathContainingGitIgnore->isFolder()) {
             throw new \InvalidArgumentException();
@@ -98,18 +99,18 @@ class File
         /*
          * check that $path represents the path containing the .gitignore file, not the path containing the ".gitignore" string
          */
-        if (preg_match("#\.gitignore$#", $relativePathContainingGitIgnore->getPath())) {
+        if (preg_match('#'.preg_quote($gitignoreFilename,'\\').'$#', $relativePathContainingGitIgnore->getPath())) {
             throw new InvalidArgumentException(
-                sprintf("The path must not end with .gitignore: \"%s\" given.", $relativePathContainingGitIgnore->getPath())
+                sprintf("The path must not end with %s: \"%s\" given.", $gitignoreFilename, $relativePathContainingGitIgnore->getPath())
             );
         }
 
         /*
          * check that a file ".gitignore" is actually found in $relativePathContainingGitIgnore
          */
-        if (!$relativePathContainingGitIgnore->containsPath('/.gitignore')) {
+        if (!$relativePathContainingGitIgnore->containsPath("/$gitignoreFilename")) {
             throw new FileNotFoundException(
-                sprintf("The path \"%s\" does not contain a .gitignore file.", $relativePathContainingGitIgnore->getPath())
+                sprintf("The path \"%s\" does not contain a %s file.", $relativePathContainingGitIgnore->getPath(), $gitignoreFilename)
             );
         }
 
@@ -121,12 +122,12 @@ class File
     /**
      * Return the absolute path for the .gitignore file
      *
-     * @param RelativePath $relativePathContainingGitIgnore
+     * @param string $gitignoreFilename The filename containing the rules.
      * @return string
      */
-    private function getAbsolutePathForGitIgnore() : string
+    private function getAbsolutePathForGitIgnore(string $gitignoreFilename = '.gitignore') : string
     {
-        return sprintf("%s/.gitignore", $this->relativePath->getAbsolutePath());
+        return sprintf("%s/%s", $this->relativePath->getAbsolutePath(), $gitignoreFilename);
     }
 
     /**

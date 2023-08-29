@@ -24,15 +24,27 @@ final class GitIgnoreChecker
     protected $repository;
 
     /**
+     * Filename to look for containing the gitignore rules.
+     *
+     * This is `.gitignore` for Git repositories, but other libraries may use the same syntax for similar purposes.
+     * @see https://github.com/wp-cli/dist-archive-command/
+     *
+     * @var string
+     */
+    protected $gitignoreFilename = '.gitignore';
+
+    /**
      * GitIgnoreChecker constructor.
      *
      * @param string $repositoryPath absolute path representing the Repository project root
+     * @param string $gitignoreFilename The filename for the text file containing the rules.
      * @throws InvalidArgumentException
      * @throws LogicException
      */
-    public function __construct($repositoryPath)
+    public function __construct($repositoryPath, string $gitignoreFilename = '.gitignore')
     {
         $this->repository = new Repository($repositoryPath);
+        $this->gitignoreFilename  = $gitignoreFilename;
     }
 
     /**
@@ -92,6 +104,6 @@ final class GitIgnoreChecker
      */
     private function searchGitIgnoreFileInRelativePath(RelativePath $relativePath) : File
     {
-        return File::buildFromRelativePathContainingGitIgnore($relativePath);
+        return File::buildFromRelativePathContainingGitIgnore($relativePath, $this->gitignoreFilename);
     }
 }
