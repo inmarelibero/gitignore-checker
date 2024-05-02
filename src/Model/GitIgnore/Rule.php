@@ -18,10 +18,7 @@ use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
  */
 class Rule
 {
-    /**
-     * @var File
-     */
-    protected $file;
+    protected File $gitIgnoreFile;
 
     /**
      * @var string represents a line of a .gitignre file
