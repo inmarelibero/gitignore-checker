@@ -19,11 +19,6 @@ use Inmarelibero\GitIgnoreChecker\Utils\PathUtils;
 class Rule
 {
     /**
-     * @var File
-     */
-    protected $file;
-
-    /**
      * @var string represents a line of a .gitignre file
      */
     protected $rule;
@@ -36,14 +31,12 @@ class Rule
     /**
      * Rule constructor.
      *
-     * @param File $file
      * @param string $rule
      * @param int $index the row number in the original .gitignore file
      * @throws InvalidArgumentException
      */
-    public function __construct(File $file, string $rule, int $index)
+    public function __construct(string $rule, int $index)
     {
-        $this->gitIgnoreFile = $file;
         $this->setRule($rule);
         $this->setIndex($index);
     }
