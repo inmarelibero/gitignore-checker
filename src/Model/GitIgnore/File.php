@@ -189,7 +189,7 @@ class File
             if (empty($line) || strpos($line, '#') === 0) {
                 continue;
             }
-            $this->rules[] = new Rule($this, $line, $k);
+            $this->rules[] = new Rule($line, $k);
         }
 
         return $this->getRules();

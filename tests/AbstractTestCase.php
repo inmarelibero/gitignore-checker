@@ -83,7 +83,6 @@ class AbstractTestCase extends TestCase
         }
 
         $ruleObj = new Rule(
-            File::buildFromRelativePathContainingGitIgnore(new RelativePath($this->getTestRepository(), '/')),
             $rule,
             0
         );
